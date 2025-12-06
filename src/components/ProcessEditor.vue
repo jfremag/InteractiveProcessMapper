@@ -55,6 +55,7 @@ const modeler = ref(null);
 const editableName = ref('');
 const current = ref(null);
 const placementCursor = ref({ x: 260, y: 180 });
+const lastElement = ref(null);
 
 async function loadProcess(id) {
   const proc = store.getProcessById(id);
@@ -69,6 +70,12 @@ async function loadProcess(id) {
     modeler.value = new BpmnModeler({ container: canvas.value });
   }
   await modeler.value.importXML(proc.bpmnXml);
+  const elementRegistry = modeler.value.get('elementRegistry');
+  const root = modeler.value.get('canvas').getRootElement();
+  lastElement.value = elementRegistry
+    .getAll()
+    .filter((el) => el.type !== 'label' && el.id !== root.id)
+    .pop() || null;
 }
 
 function saveProcess() {
@@ -132,6 +139,16 @@ function createShape(type, label) {
   if (label) {
     modeling.updateLabel(shape, label);
   }
+
+  if (lastElement.value && lastElement.value !== shape) {
+    try {
+      modeling.connect(lastElement.value, shape);
+    } catch (err) {
+      console.warn('Unable to connect elements', err);
+    }
+  }
+
+  lastElement.value = shape;
 }
 
 function createTask() {
