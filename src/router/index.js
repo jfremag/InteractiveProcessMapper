@@ -1,7 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import ProcessList from '../components/ProcessList.vue';
-import ProcessEditor from '../components/ProcessEditor.vue';
-import ProcessViewer from '../components/ProcessViewer.vue';
+
+const ProcessList = () => import('../components/ProcessList.vue');
+const ProcessEditor = () => import('../components/ProcessEditor.vue');
+const ProcessViewer = () => import('../components/ProcessViewer.vue');
 
 const routes = [
   { path: '/', name: 'home', component: ProcessList },
