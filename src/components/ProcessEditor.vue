@@ -247,39 +247,6 @@ async function importDiagram(xml) {
   }
 }
 
-function setLastElementFromDiagram() {
-  if (!modeler.value) return
-  const elementRegistry = modeler.value.get('elementRegistry')
-  const root = modeler.value.get('canvas').getRootElement()
-  const flowNodes = elementRegistry
-    .getAll()
-    .filter(
-      (el) =>
-        el.type &&
-        el.type.startsWith('bpmn:') &&
-        !el.waypoints &&
-        el.id !== root.id
-    )
-
-  lastElement.value = flowNodes[flowNodes.length - 1] || null
-}
-
-async function importDiagram(xml) {
-  if (!modeler.value) return
-  modelReady.value = false
-  loadingModel.value = true
-  try {
-    await modeler.value.importXML(xml)
-    setLastElementFromDiagram()
-    modelReady.value = true
-  } catch (error) {
-    console.error('Failed to import BPMN', error)
-    alert('Unable to load the BPMN diagram. Please verify the file.')
-  } finally {
-    loadingModel.value = false
-  }
-}
-
 onMounted(async () => {
   await loadProcess(route.params.id)
   if (current.value && modeler.value) {
