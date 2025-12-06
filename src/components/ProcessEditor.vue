@@ -13,7 +13,21 @@
         <button class="btn btn-primary" @click="saveProcess">Save</button>
       </div>
     </div>
-    <div ref="canvas" style="height: 600px; border: 1px solid #e5e7eb; border-radius: 8px;"></div>
+
+    <div class="editor-grid">
+      <div class="toolbar">
+        <p class="toolbar-title">Quick add</p>
+        <div class="toolbar-actions">
+          <button class="btn btn-secondary" @click="createTask">Task</button>
+          <button class="btn btn-secondary" @click="createGateway">Gateway</button>
+          <button class="btn btn-secondary" @click="createStart">Start Event</button>
+          <button class="btn btn-secondary" @click="createEnd">End Event</button>
+        </div>
+        <p class="toolbar-hint">Use the palette or quick buttons to drop new BPMN elements into your process.</p>
+      </div>
+
+      <div ref="canvas" class="modeler-canvas"></div>
+    </div>
     <input ref="importInput" type="file" accept=".bpmn,text/xml" hidden @change="handleImport" />
   </div>
   <div v-else class="card">
@@ -40,6 +54,7 @@ const importInput = ref(null);
 const modeler = ref(null);
 const editableName = ref('');
 const current = ref(null);
+const placementCursor = ref({ x: 260, y: 180 });
 
 async function loadProcess(id) {
   const proc = store.getProcessById(id);
@@ -49,6 +64,7 @@ async function loadProcess(id) {
   }
   current.value = proc;
   editableName.value = proc.name;
+  placementCursor.value = { x: 260, y: 180 };
   if (!modeler.value) {
     modeler.value = new BpmnModeler({ container: canvas.value });
   }
@@ -92,6 +108,48 @@ function handleImport(event) {
   event.target.value = '';
 }
 
+function nextPlacement() {
+  const coords = { ...placementCursor.value };
+  placementCursor.value.x += 140;
+  if (placementCursor.value.x > 900) {
+    placementCursor.value.x = 260;
+    placementCursor.value.y += 140;
+  }
+  return coords;
+}
+
+function createShape(type, label) {
+  if (!modeler.value) return;
+  const elementFactory = modeler.value.get('elementFactory');
+  const modeling = modeler.value.get('modeling');
+  const canvasApi = modeler.value.get('canvas');
+  const root = canvasApi.getRootElement();
+  const position = nextPlacement();
+
+  const shape = elementFactory.createShape({ type });
+  modeling.createShape(shape, position, root);
+
+  if (label) {
+    modeling.updateLabel(shape, label);
+  }
+}
+
+function createTask() {
+  createShape('bpmn:Task', 'Task');
+}
+
+function createGateway() {
+  createShape('bpmn:ExclusiveGateway', 'Gateway');
+}
+
+function createStart() {
+  createShape('bpmn:StartEvent', 'Start');
+}
+
+function createEnd() {
+  createShape('bpmn:EndEvent', 'End');
+}
+
 function goHome() {
   router.push('/');
 }
@@ -117,3 +175,54 @@ onBeforeUnmount(() => {
   modeler.value?.destroy();
 });
 </script>
+
+<style scoped>
+.editor-grid {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 1rem;
+}
+
+.toolbar {
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.toolbar-title {
+  margin: 0;
+  font-weight: 700;
+}
+
+.toolbar-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.toolbar-hint {
+  margin: 0;
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+.modeler-canvas {
+  height: 600px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+
+@media (max-width: 900px) {
+  .editor-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .toolbar-actions {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  }
+}
+</style>
