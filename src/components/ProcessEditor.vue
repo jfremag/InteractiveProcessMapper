@@ -95,6 +95,7 @@ const loadingModel = ref(false)
 const placementCursor = ref({ x: 260, y: 180 })
 const lastElement = ref(null)
 const resizeObserver = ref(null)
+const removeWheelListener = ref(null)
 
 function refreshViewport() {
   if (!modeler.value) return
@@ -128,6 +129,8 @@ async function loadProcess(id) {
       // Disable ZoomScroll to avoid non-passive wheel listeners in Chrome
       additionalModules: [{ zoomScroll: ['value', null] }],
     })
+
+    setupWheelZoom()
 
     resizeObserver.value = new ResizeObserver(() => {
       refreshViewport()
@@ -243,6 +246,33 @@ function goView() {
   }
 }
 
+function setupWheelZoom() {
+  if (!canvas.value) return
+
+  const handleWheel = (event) => {
+    if (!modeler.value) return
+
+    event.preventDefault()
+
+    const canvasApi = modeler.value.get('canvas')
+    const currentZoom = canvasApi.zoom() || 1
+    const delta = event.deltaY
+    const step = delta > 0 ? 0.9 : 1.1
+    const nextZoom = Math.min(4, Math.max(0.2, currentZoom * step))
+
+    const rect = canvas.value.getBoundingClientRect()
+    const x = event.clientX - rect.left
+    const y = event.clientY - rect.top
+
+    canvasApi.zoom(nextZoom, { x, y })
+  }
+
+  canvas.value.addEventListener('wheel', handleWheel, { passive: false })
+  removeWheelListener.value = () => {
+    canvas.value?.removeEventListener('wheel', handleWheel)
+  }
+}
+
 function setLastElementFromDiagram() {
   if (!modeler.value) return
   const elementRegistry = modeler.value.get('elementRegistry')
@@ -329,6 +359,7 @@ watch(
 onBeforeUnmount(() => {
   resizeObserver.value?.disconnect()
   modeler.value?.destroy()
+  removeWheelListener.value?.()
 })
 </script>
 
