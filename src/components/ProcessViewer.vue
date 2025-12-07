@@ -40,7 +40,8 @@ function refreshViewport() {
   if (!viewer.value) return;
   const canvasModule = viewer.value.get('canvas');
   canvasModule?.resized();
-  canvasModule?.zoom('fit-viewport');
+  canvasModule?.zoom('fit-viewport', 'auto');
+  canvasModule?.center();
 }
 
 async function loadProcess(id) {
@@ -172,8 +173,8 @@ onBeforeUnmount(() => {
   background: #fff;
   overflow: hidden;
   flex: 1;
-  min-height: 480px;
-  height: 100%;
+  height: calc(100vh - 220px);
+  min-height: calc(100vh - 220px);
   max-height: none;
 }
 
@@ -184,14 +185,14 @@ onBeforeUnmount(() => {
 
 @media (max-width: 900px) {
   .viewer-canvas {
+    height: calc(100vh - 260px);
     min-height: 400px;
-    height: 100%;
   }
 }
 
 @media (max-width: 640px) {
   .viewer-canvas {
-    height: 100%;
+    height: calc(100vh - 280px);
   }
 }
 </style>
