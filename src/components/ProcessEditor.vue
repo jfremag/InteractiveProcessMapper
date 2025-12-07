@@ -254,7 +254,17 @@ async function importDiagram(xml) {
         console.error('Fallback import failed', fallbackError)
       }
     }
-    alert('Unable to load the BPMN diagram. Please verify the file.')
+
+    try {
+      await modeler.value.createDiagram()
+      modeler.value.get('canvas').zoom('fit-viewport')
+      setLastElementFromDiagram()
+      modelReady.value = true
+      alert('Started a new blank diagram because the file could not be loaded.')
+    } catch (createError) {
+      console.error('Creating a new diagram also failed', createError)
+      alert('Unable to load the BPMN diagram. Please verify the file.')
+    }
   } finally {
     loadingModel.value = false
   }
