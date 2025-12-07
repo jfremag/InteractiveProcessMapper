@@ -45,6 +45,9 @@ function refreshViewport() {
 
   canvasModule.resized();
 
+  const { width: viewportWidth, height: viewportHeight } = canvasModule.getSize();
+  if (!viewportWidth || !viewportHeight) return;
+
   const root = canvasModule.getRootElement();
   const elements = elementRegistry
     .getAll()
@@ -56,14 +59,15 @@ function refreshViewport() {
   }
 
   const bounds = getBBox(elements);
-  const { width: viewportWidth, height: viewportHeight } = canvasModule.getSize();
   const padding = 40;
   const targetWidth = bounds.width + padding * 2;
   const targetHeight = bounds.height + padding * 2;
   const zoom = Math.min(viewportWidth / targetWidth, viewportHeight / targetHeight);
 
-  const viewWidth = viewportWidth / zoom;
-  const viewHeight = viewportHeight / zoom;
+  const clampedZoom = Math.min(4, Math.max(0.2, zoom));
+  const viewWidth = viewportWidth / clampedZoom;
+  const viewHeight = viewportHeight / clampedZoom;
+  
   const centerX = bounds.x + bounds.width / 2;
   const centerY = bounds.y + bounds.height / 2;
 
@@ -194,7 +198,7 @@ onBeforeUnmount(() => {
   flex-direction: column;
   gap: 1rem;
   flex: 1;
-  min-height: 60vh;
+  min-height: 0;
   height: 100%;
 }
 
@@ -203,12 +207,15 @@ onBeforeUnmount(() => {
   border-radius: 8px;
   background: #fff;
   overflow: hidden;
-  flex: 1;
-  min-height: clamp(260px, 50vh, 720px);
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
   width: 100%;
 }
 
 :deep(.viewer-canvas > .djs-container) {
+  flex: 1 1 auto;
   width: 100%;
   height: 100%;
 }
