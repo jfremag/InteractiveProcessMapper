@@ -237,6 +237,7 @@ async function importDiagram(xml) {
   loadingModel.value = true
   try {
     await modeler.value.importXML(xml)
+    modeler.value.get('canvas').zoom('fit-viewport')
     setLastElementFromDiagram()
     modelReady.value = true
   } catch (error) {
@@ -304,9 +305,17 @@ onBeforeUnmount(() => {
 }
 
 .modeler-canvas {
+  position: relative;
   height: 600px;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
+  background: #fff;
+  overflow: hidden;
+}
+
+:deep(.modeler-canvas > .djs-container) {
+  height: 100%;
+  width: 100%;
 }
 
 @media (max-width: 900px) {
