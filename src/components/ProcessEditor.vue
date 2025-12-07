@@ -1,5 +1,5 @@
 <template>
-  <div class="card" v-if="current">
+  <div class="card editor-card" v-if="current">
     <div class="section-title">
       <div>
         <h2>Edit: {{ current.name }}</h2>
@@ -364,10 +364,22 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+.editor-card {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  flex: 1;
+  min-height: 0;
+}
+
 .editor-grid {
   display: grid;
-  grid-template-columns: 240px 1fr;
+  grid-template-columns: minmax(240px, 320px) 1fr;
   gap: 1rem;
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+  align-items: stretch;
 }
 
 .toolbar {
@@ -378,6 +390,7 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  min-height: 100%;
 }
 
 .toolbar-title {
@@ -399,12 +412,13 @@ onBeforeUnmount(() => {
 
 .modeler-canvas {
   position: relative;
-  height: clamp(420px, 70vh, 860px);
-  min-height: 360px;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
   background: #fff;
   overflow: hidden;
+  height: auto;
+  min-height: 520px;
+  max-height: calc(100vh - 220px);
 }
 
 :deep(.modeler-canvas > .djs-container) {
@@ -419,6 +433,16 @@ onBeforeUnmount(() => {
 
   .toolbar-actions {
     grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  }
+
+  .modeler-canvas {
+    max-height: calc(100vh - 180px);
+  }
+}
+
+@media (max-width: 640px) {
+  .modeler-canvas {
+    min-height: 440px;
   }
 }
 </style>
