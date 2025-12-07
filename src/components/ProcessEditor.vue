@@ -79,7 +79,7 @@ import BpmnModeler from 'bpmn-js/lib/Modeler'
 import 'bpmn-js/dist/assets/diagram-js.css'
 import 'bpmn-js/dist/assets/bpmn-js.css'
 import 'bpmn-js/dist/assets/bpmn-font/css/bpmn-embedded.css'
-import { useProcessStore } from '../stores/processStore.js'
+import { useProcessStore, defaultBpmn } from '../stores/processStore.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -235,13 +235,25 @@ async function importDiagram(xml) {
   if (!modeler.value) return
   modelReady.value = false
   loadingModel.value = true
+  const diagramXml = xml || defaultBpmn
   try {
-    await modeler.value.importXML(xml)
+    await modeler.value.importXML(diagramXml)
     modeler.value.get('canvas').zoom('fit-viewport')
     setLastElementFromDiagram()
     modelReady.value = true
   } catch (error) {
     console.error('Failed to import BPMN', error)
+    if (diagramXml !== defaultBpmn) {
+      try {
+        await modeler.value.importXML(defaultBpmn)
+        modeler.value.get('canvas').zoom('fit-viewport')
+        setLastElementFromDiagram()
+        modelReady.value = true
+        return
+      } catch (fallbackError) {
+        console.error('Fallback import failed', fallbackError)
+      }
+    }
     alert('Unable to load the BPMN diagram. Please verify the file.')
   } finally {
     loadingModel.value = false
