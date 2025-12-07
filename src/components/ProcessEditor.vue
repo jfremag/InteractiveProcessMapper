@@ -427,6 +427,10 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 900px) {
+  .editor-card {
+    min-height: calc(100vh - 140px);
+  }
+
   .editor-grid {
     grid-template-columns: 1fr;
   }
