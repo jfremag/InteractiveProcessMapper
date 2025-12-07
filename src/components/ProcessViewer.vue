@@ -162,7 +162,7 @@ onBeforeUnmount(() => {
   flex-direction: column;
   gap: 1rem;
   flex: 1;
-  min-height: 0;
+  min-height: calc(100vh - 200px);
 }
 
 .viewer-canvas {
@@ -172,8 +172,8 @@ onBeforeUnmount(() => {
   overflow: hidden;
   flex: 1;
   min-height: 480px;
-  height: auto;
-  max-height: calc(100vh - 220px);
+  height: calc(100vh - 240px);
+  max-height: none;
 }
 
 :deep(.viewer-canvas > .djs-container) {
@@ -183,14 +183,14 @@ onBeforeUnmount(() => {
 
 @media (max-width: 900px) {
   .viewer-canvas {
-    max-height: calc(100vh - 180px);
     min-height: 400px;
+    height: calc(100vh - 200px);
   }
 }
 
 @media (max-width: 640px) {
   .viewer-canvas {
-    max-height: calc(100vh - 160px);
+    height: calc(100vh - 180px);
   }
 }
 </style>
