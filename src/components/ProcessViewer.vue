@@ -17,7 +17,7 @@
 </template>
 
 <script setup>
-import { onMounted, onBeforeUnmount, ref, watch } from 'vue';
+import { onMounted, onBeforeUnmount, ref, watch, nextTick } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import BpmnViewer from 'bpmn-js/lib/Viewer';
 import 'bpmn-js/dist/assets/diagram-js.css';
@@ -41,6 +41,11 @@ async function loadProcess(id) {
   }
   current.value = proc;
   if (!viewer.value) {
+    await nextTick();
+    if (!canvas.value) {
+      console.error('Canvas element is not available for BPMN viewer.');
+      return;
+    }
     viewer.value = new BpmnViewer({ container: canvas.value });
   }
   const xml = proc.bpmnXml || defaultBpmn;
