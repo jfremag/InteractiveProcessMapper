@@ -164,6 +164,7 @@ onBeforeUnmount(() => {
   flex: 1;
   min-height: 0;
   height: 100%;
+  min-height: max(560px, calc(100vh - 160px));
 }
 
 .viewer-canvas {
@@ -172,7 +173,7 @@ onBeforeUnmount(() => {
   background: #fff;
   overflow: hidden;
   flex: 1;
-  min-height: 480px;
+  min-height: max(520px, calc(100vh - 220px));
   height: 100%;
   max-height: none;
 }
