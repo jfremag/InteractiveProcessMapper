@@ -21,6 +21,7 @@ import { onMounted, onBeforeUnmount, ref, watch, nextTick } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import BpmnViewer from 'bpmn-js/lib/Viewer';
 import MoveCanvasModule from 'diagram-js/lib/navigation/movecanvas';
+import { getBBox } from 'diagram-js/lib/util/Elements';
 import 'bpmn-js/dist/assets/diagram-js.css';
 import 'bpmn-js/dist/assets/bpmn-js.css';
 import 'bpmn-js/dist/assets/bpmn-font/css/bpmn-embedded.css';
@@ -39,13 +40,39 @@ const removeWheelListener = ref(null);
 function refreshViewport() {
   if (!viewer.value) return;
   const canvasModule = viewer.value.get('canvas');
-  canvasModule?.resized();
+  const elementRegistry = viewer.value.get('elementRegistry');
+  if (!canvasModule || !elementRegistry) return;
 
-  // Always fit the full diagram inside the available canvas area
-  canvasModule?.zoom('fit-viewport');
+  canvasModule.resized();
 
-  // Ensure the visible area is centered after fitting the viewport
-  canvasModule?.center();
+  const root = canvasModule.getRootElement();
+  const elements = elementRegistry
+    .getAll()
+    .filter((element) => element !== root && element.labelTarget !== root);
+
+  if (!elements.length) {
+    canvasModule.zoom('fit-viewport');
+    return;
+  }
+
+  const bounds = getBBox(elements);
+  const { width: viewportWidth, height: viewportHeight } = canvasModule.getSize();
+  const padding = 40;
+  const targetWidth = bounds.width + padding * 2;
+  const targetHeight = bounds.height + padding * 2;
+  const zoom = Math.min(viewportWidth / targetWidth, viewportHeight / targetHeight);
+
+  const viewWidth = viewportWidth / zoom;
+  const viewHeight = viewportHeight / zoom;
+  const centerX = bounds.x + bounds.width / 2;
+  const centerY = bounds.y + bounds.height / 2;
+
+  canvasModule.viewbox({
+    x: centerX - viewWidth / 2,
+    y: centerY - viewHeight / 2,
+    width: viewWidth,
+    height: viewHeight,
+  });
 }
 
 async function loadProcess(id) {
@@ -167,7 +194,7 @@ onBeforeUnmount(() => {
   flex-direction: column;
   gap: 1rem;
   flex: 1;
-  min-height: 0;
+  min-height: 60vh;
   height: 100%;
 }
 
@@ -177,7 +204,7 @@ onBeforeUnmount(() => {
   background: #fff;
   overflow: hidden;
   flex: 1;
-  min-height: 420px;
+  min-height: clamp(260px, 50vh, 720px);
   width: 100%;
 }
 
