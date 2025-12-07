@@ -23,7 +23,7 @@ import BpmnViewer from 'bpmn-js/lib/Viewer';
 import 'bpmn-js/dist/assets/diagram-js.css';
 import 'bpmn-js/dist/assets/bpmn-js.css';
 import 'bpmn-js/dist/assets/bpmn-font/css/bpmn-embedded.css';
-import { useProcessStore } from '../stores/processStore.js';
+import { useProcessStore, defaultBpmn } from '../stores/processStore.js';
 
 const route = useRoute();
 const router = useRouter();
@@ -43,9 +43,24 @@ async function loadProcess(id) {
   if (!viewer.value) {
     viewer.value = new BpmnViewer({ container: canvas.value });
   }
-  await viewer.value.importXML(proc.bpmnXml);
+  const xml = proc.bpmnXml || defaultBpmn;
+  try {
+    await viewer.value.importXML(xml);
+  } catch (err) {
+    console.error('Failed to import BPMN for viewer', err);
+    if (xml !== defaultBpmn) {
+      try {
+        await viewer.value.importXML(defaultBpmn);
+      } catch (fallbackError) {
+        console.error('Fallback import for viewer also failed', fallbackError);
+        return;
+      }
+    } else {
+      return;
+    }
+  }
   const canvasModule = viewer.value.get('canvas');
-  canvasModule.zoom('fit-viewport');
+  canvasModule?.zoom('fit-viewport');
 }
 
 function downloadXml() {
