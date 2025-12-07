@@ -248,7 +248,11 @@ async function importDiagram(xml) {
         await modeler.value.importXML(defaultBpmn)
         modeler.value.get('canvas').zoom('fit-viewport')
         setLastElementFromDiagram()
+        if (current.value) {
+          store.updateProcess(current.value.id, { bpmnXml: defaultBpmn })
+        }
         modelReady.value = true
+        alert('Loaded a blank starter diagram because the file could not be loaded.')
         return
       } catch (fallbackError) {
         console.error('Fallback import failed', fallbackError)
@@ -260,6 +264,10 @@ async function importDiagram(xml) {
       modeler.value.get('canvas').zoom('fit-viewport')
       setLastElementFromDiagram()
       modelReady.value = true
+      if (current.value) {
+        const { xml: freshXml } = await modeler.value.saveXML({ format: true })
+        store.updateProcess(current.value.id, { bpmnXml: freshXml })
+      }
       alert('Started a new blank diagram because the file could not be loaded.')
     } catch (createError) {
       console.error('Creating a new diagram also failed', createError)
