@@ -21,6 +21,12 @@ body {
   background-color: #f5f7fa;
 }
 
+:root,
+body,
+#app {
+  height: 100%;
+}
+
 a {
   color: inherit;
   text-decoration: none;
@@ -142,6 +148,11 @@ button {
 
 .table {
   min-width: 620px;
+}
+
+/* Hide the BPMN.io watermark to avoid overlaying the canvas */
+.bjs-powered-by {
+  display: none !important;
 }
 
 @media (max-width: 900px) {

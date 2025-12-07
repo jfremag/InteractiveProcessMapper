@@ -97,6 +97,37 @@ const lastElement = ref(null)
 const resizeObserver = ref(null)
 const removeWheelListener = ref(null)
 
+async function ensureCanvasSized() {
+  await nextTick()
+
+  const element = canvas.value
+  if (!element) return false
+
+  if (element.clientWidth > 0 && element.clientHeight > 0) return true
+
+  return new Promise((resolve) => {
+    let observer
+    const timeout = setTimeout(() => {
+      observer?.disconnect()
+      resolve(false)
+    }, 500)
+
+    const checkSize = (entries) => {
+      const target = entries?.[0]?.target ?? element
+      if (target.clientWidth > 0 && target.clientHeight > 0) {
+        clearTimeout(timeout)
+        observer?.disconnect()
+        resolve(true)
+      }
+    }
+
+    observer = new ResizeObserver(checkSize)
+    observer.observe(element)
+
+    requestAnimationFrame(() => checkSize())
+  })
+}
+
 function refreshViewport() {
   if (!modeler.value) return
   const canvasApi = modeler.value.get('canvas')
@@ -297,6 +328,7 @@ async function importDiagram(xml) {
   const diagramXml = xml || defaultBpmn
   try {
     await modeler.value.importXML(diagramXml)
+    await ensureCanvasSized()
     refreshViewport()
     setLastElementFromDiagram()
     modelReady.value = true
@@ -420,11 +452,14 @@ onBeforeUnmount(() => {
   height: 100%;
   min-height: 520px;
   max-height: none;
+  display: flex;
+  flex: 1 1 auto;
 }
 
 :deep(.modeler-canvas > .djs-container) {
   height: 100%;
   width: 100%;
+  flex: 1 1 auto;
 }
 
 @media (max-width: 900px) {
