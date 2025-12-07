@@ -369,7 +369,8 @@ onBeforeUnmount(() => {
   flex-direction: column;
   gap: 1rem;
   flex: 1;
-  min-height: calc(100vh - 200px);
+  min-height: 0;
+  height: 100%;
 }
 
 .editor-grid {
@@ -416,7 +417,7 @@ onBeforeUnmount(() => {
   border-radius: 8px;
   background: #fff;
   overflow: hidden;
-  height: calc(100vh - 240px);
+  height: 100%;
   min-height: 520px;
   max-height: none;
 }
@@ -428,7 +429,7 @@ onBeforeUnmount(() => {
 
 @media (max-width: 900px) {
   .editor-card {
-    min-height: calc(100vh - 140px);
+    min-height: 0;
   }
 
   .editor-grid {
@@ -440,14 +441,14 @@ onBeforeUnmount(() => {
   }
 
   .modeler-canvas {
-    height: calc(100vh - 200px);
+    height: 100%;
   }
 }
 
 @media (max-width: 640px) {
   .modeler-canvas {
     min-height: 440px;
-    height: calc(100vh - 180px);
+    height: 100%;
   }
 }
 </style>
