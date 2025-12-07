@@ -33,6 +33,7 @@ const canvas = ref(null);
 const viewer = ref(null);
 const current = ref(null);
 const resizeObserver = ref(null);
+const removeWheelListener = ref(null);
 
 function refreshViewport() {
   if (!viewer.value) return;
@@ -55,6 +56,8 @@ async function loadProcess(id) {
       return;
     }
     viewer.value = new BpmnViewer({ container: canvas.value });
+
+    setupWheelZoom();
 
     resizeObserver.value = new ResizeObserver(() => {
       refreshViewport();
@@ -104,6 +107,33 @@ function goEdit() {
   }
 }
 
+function setupWheelZoom() {
+  if (!canvas.value) return;
+
+  const handleWheel = (event) => {
+    if (!viewer.value) return;
+
+    event.preventDefault();
+
+    const canvasApi = viewer.value.get('canvas');
+    const currentZoom = canvasApi.zoom() || 1;
+    const delta = event.deltaY;
+    const step = delta > 0 ? 0.9 : 1.1;
+    const nextZoom = Math.min(4, Math.max(0.2, currentZoom * step));
+
+    const rect = canvas.value.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+
+    canvasApi.zoom(nextZoom, { x, y });
+  };
+
+  canvas.value.addEventListener('wheel', handleWheel, { passive: false });
+  removeWheelListener.value = () => {
+    canvas.value?.removeEventListener('wheel', handleWheel);
+  };
+}
+
 onMounted(async () => {
   await loadProcess(route.params.id);
 });
@@ -118,6 +148,7 @@ watch(
 onBeforeUnmount(() => {
   resizeObserver.value?.disconnect();
   viewer.value?.destroy();
+  removeWheelListener.value?.();
 });
 </script>
 
