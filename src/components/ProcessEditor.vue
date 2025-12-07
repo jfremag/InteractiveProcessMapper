@@ -73,7 +73,7 @@
 </template>
 
 <script setup>
-import { onMounted, onBeforeUnmount, ref, watch } from 'vue'
+import { onMounted, onBeforeUnmount, ref, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import BpmnModeler from 'bpmn-js/lib/Modeler'
 import 'bpmn-js/dist/assets/diagram-js.css'
@@ -97,8 +97,8 @@ const lastElement = ref(null)
 
 async function loadProcess(id) {
   modelReady.value = false
-  const proc = store.getProcessById(id)
 
+  const proc = store.getProcessById(id)
   if (!proc) {
     current.value = null
     return
@@ -108,7 +108,7 @@ async function loadProcess(id) {
   editableName.value = proc.name
   placementCursor.value = { x: 260, y: 180 }
 
-  // Wait until the DOM has rendered the card + canvas (v-if="current")
+  // Ensure DOM is updated so <div ref="canvas"> exists
   if (!modeler.value) {
     await nextTick()
     if (!canvas.value) {
