@@ -161,7 +161,8 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  min-height: calc(100vh - 180px);
+  flex: 1;
+  min-height: 0;
 }
 
 .viewer-canvas {
@@ -171,7 +172,8 @@ onBeforeUnmount(() => {
   overflow: hidden;
   flex: 1;
   min-height: 480px;
-  height: calc(100vh - 240px);
+  height: auto;
+  max-height: calc(100vh - 220px);
 }
 
 :deep(.viewer-canvas > .djs-container) {
@@ -180,19 +182,15 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 900px) {
-  .viewer-card {
-    min-height: calc(100vh - 140px);
-  }
-
   .viewer-canvas {
-    height: calc(100vh - 200px);
+    max-height: calc(100vh - 180px);
     min-height: 400px;
   }
 }
 
 @media (max-width: 640px) {
   .viewer-canvas {
-    height: calc(100vh - 180px);
+    max-height: calc(100vh - 160px);
   }
 }
 </style>

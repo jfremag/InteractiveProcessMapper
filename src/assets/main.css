@@ -21,7 +21,7 @@ button {
 }
 
 .container {
-  width: min(1400px, 100%);
+  width: min(1920px, 100%);
   max-width: 100%;
   margin: 0 auto;
   padding: 1.5rem 1.25rem;

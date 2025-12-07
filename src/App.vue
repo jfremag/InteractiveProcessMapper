@@ -40,6 +40,13 @@ onMounted(() => {
   flex-direction: column;
 }
 
+.app-main > .container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
 .header-inner {
   display: flex;
   align-items: center;

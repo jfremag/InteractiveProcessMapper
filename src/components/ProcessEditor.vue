@@ -368,7 +368,8 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  min-height: calc(100vh - 180px);
+  flex: 1;
+  min-height: 0;
 }
 
 .editor-grid {
@@ -377,6 +378,7 @@ onBeforeUnmount(() => {
   gap: 1rem;
   flex: 1;
   min-height: 0;
+  height: 100%;
   align-items: stretch;
 }
 
@@ -414,7 +416,7 @@ onBeforeUnmount(() => {
   border-radius: 8px;
   background: #fff;
   overflow: hidden;
-  height: 100%;
+  height: auto;
   min-height: 520px;
   max-height: calc(100vh - 220px);
 }
