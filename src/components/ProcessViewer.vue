@@ -20,6 +20,7 @@
 import { onMounted, onBeforeUnmount, ref, watch, nextTick } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import BpmnViewer from 'bpmn-js/lib/Viewer';
+import MoveCanvasModule from 'diagram-js/lib/navigation/movecanvas';
 import 'bpmn-js/dist/assets/diagram-js.css';
 import 'bpmn-js/dist/assets/bpmn-js.css';
 import 'bpmn-js/dist/assets/bpmn-font/css/bpmn-embedded.css';
@@ -55,7 +56,10 @@ async function loadProcess(id) {
       console.error('Canvas element is not available for BPMN viewer.');
       return;
     }
-    viewer.value = new BpmnViewer({ container: canvas.value });
+    viewer.value = new BpmnViewer({
+      container: canvas.value,
+      additionalModules: [MoveCanvasModule],
+    });
 
     setupWheelZoom();
 
