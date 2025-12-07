@@ -98,14 +98,23 @@ const lastElement = ref(null)
 async function loadProcess(id) {
   modelReady.value = false
   const proc = store.getProcessById(id)
+
   if (!proc) {
     current.value = null
     return
   }
+
   current.value = proc
   editableName.value = proc.name
   placementCursor.value = { x: 260, y: 180 }
+
+  // Wait until the DOM has rendered the card + canvas (v-if="current")
   if (!modeler.value) {
+    await nextTick()
+    if (!canvas.value) {
+      console.error('Canvas element is not available for BPMN modeler.')
+      return
+    }
     modeler.value = new BpmnModeler({ container: canvas.value })
   }
 }
@@ -252,7 +261,9 @@ async function importDiagram(xml) {
           store.updateProcess(current.value.id, { bpmnXml: defaultBpmn })
         }
         modelReady.value = true
-        alert('Loaded a blank starter diagram because the file could not be loaded.')
+        alert(
+          'Loaded a blank starter diagram because the file could not be loaded.'
+        )
         return
       } catch (fallbackError) {
         console.error('Fallback import failed', fallbackError)
