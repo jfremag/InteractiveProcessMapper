@@ -40,7 +40,11 @@ function refreshViewport() {
   if (!viewer.value) return;
   const canvasModule = viewer.value.get('canvas');
   canvasModule?.resized();
-  canvasModule?.zoom('fit-viewport', 'auto');
+
+  // Always fit the full diagram inside the available canvas area
+  canvasModule?.zoom('fit-viewport');
+
+  // Ensure the visible area is centered after fitting the viewport
   canvasModule?.center();
 }
 
@@ -173,9 +177,8 @@ onBeforeUnmount(() => {
   background: #fff;
   overflow: hidden;
   flex: 1;
-  height: calc(100vh - 220px);
-  min-height: calc(100vh - 220px);
-  max-height: none;
+  min-height: 420px;
+  width: 100%;
 }
 
 :deep(.viewer-canvas > .djs-container) {
@@ -185,14 +188,13 @@ onBeforeUnmount(() => {
 
 @media (max-width: 900px) {
   .viewer-canvas {
-    height: calc(100vh - 260px);
-    min-height: 400px;
+    min-height: 320px;
   }
 }
 
 @media (max-width: 640px) {
   .viewer-canvas {
-    height: calc(100vh - 280px);
+    min-height: 260px;
   }
 }
 </style>
