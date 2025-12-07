@@ -37,6 +37,37 @@ const current = ref(null);
 const resizeObserver = ref(null);
 const removeWheelListener = ref(null);
 
+async function ensureCanvasSized() {
+  await nextTick();
+
+  const element = canvas.value;
+  if (!element) return false;
+
+  if (element.clientWidth > 0 && element.clientHeight > 0) return true;
+
+  return new Promise((resolve) => {
+    let observer;
+    const timeout = setTimeout(() => {
+      observer?.disconnect();
+      resolve(false);
+    }, 500);
+
+    const checkSize = (entries) => {
+      const target = entries?.[0]?.target ?? element;
+      if (target.clientWidth > 0 && target.clientHeight > 0) {
+        clearTimeout(timeout);
+        observer?.disconnect();
+        resolve(true);
+      }
+    };
+
+    observer = new ResizeObserver(checkSize);
+    observer.observe(element);
+
+    requestAnimationFrame(() => checkSize());
+  });
+}
+
 function refreshViewport() {
   if (!viewer.value) return;
   const canvasModule = viewer.value.get('canvas');
@@ -120,6 +151,7 @@ async function loadProcess(id) {
       return;
     }
   }
+  await ensureCanvasSized();
   refreshViewport();
 }
 
