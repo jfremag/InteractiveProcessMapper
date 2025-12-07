@@ -10,7 +10,9 @@
     </header>
     <main class="app-main">
       <div class="container">
-        <router-view />
+        <div class="view-wrapper">
+          <router-view />
+        </div>
       </div>
     </main>
   </div>
@@ -44,6 +46,13 @@ onMounted(() => {
   flex: 1;
   display: flex;
   flex-direction: column;
+  min-height: 0;
+}
+
+.view-wrapper {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
   min-height: 0;
 }
 
