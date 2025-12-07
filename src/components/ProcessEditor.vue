@@ -73,7 +73,7 @@
 </template>
 
 <script setup>
-import { onMounted, onBeforeUnmount, ref, watch, nextTick } from 'vue'
+import { onMounted, onBeforeUnmount, ref, watch, nextTick, toRaw } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import BpmnModeler from 'bpmn-js/lib/Modeler'
 import 'bpmn-js/dist/assets/diagram-js.css'
@@ -115,7 +115,11 @@ async function loadProcess(id) {
       console.error('Canvas element is not available for BPMN modeler.')
       return
     }
-    modeler.value = new BpmnModeler({ container: canvas.value })
+    modeler.value = new BpmnModeler({
+      container: canvas.value,
+      // Disable ZoomScroll to avoid non-passive wheel listeners in Chrome
+      additionalModules: [{ zoomScroll: ['value', null] }],
+    })
   }
 }
 
@@ -187,8 +191,11 @@ function createShape(type, label) {
   const canConnectFromLast = lastElement.value && !lastElement.value.waypoints
 
   if (canConnectFromLast && lastElement.value !== shape) {
+    const source = toRaw(lastElement.value)
+    const target = toRaw(shape)
+
     try {
-      modeling.connect(lastElement.value, shape)
+      modeling.connect(source, target)
     } catch (err) {
       console.warn('Unable to connect elements', err)
     }
