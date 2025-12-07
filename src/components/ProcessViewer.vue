@@ -162,7 +162,7 @@ onBeforeUnmount(() => {
   flex-direction: column;
   gap: 1rem;
   flex: 1;
-  min-height: calc(100vh - 200px);
+  min-height: 0;
 }
 
 .viewer-canvas {
@@ -172,7 +172,7 @@ onBeforeUnmount(() => {
   overflow: hidden;
   flex: 1;
   min-height: 480px;
-  height: calc(100vh - 240px);
+  height: 100%;
   max-height: none;
 }
 
@@ -184,13 +184,13 @@ onBeforeUnmount(() => {
 @media (max-width: 900px) {
   .viewer-canvas {
     min-height: 400px;
-    height: calc(100vh - 200px);
+    height: 100%;
   }
 }
 
 @media (max-width: 640px) {
   .viewer-canvas {
-    height: calc(100vh - 180px);
+    height: 100%;
   }
 }
 </style>
