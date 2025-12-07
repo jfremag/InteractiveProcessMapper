@@ -9,32 +9,34 @@
       </div>
     </div>
 
-    <table class="table">
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Updated</th>
-          <th style="width: 260px">Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="proc in processes" :key="proc.id">
-          <td>{{ proc.name }}</td>
-          <td>{{ formatDate(proc.updatedAt) }}</td>
-          <td>
-            <div class="actions">
-              <button class="btn btn-secondary" @click="edit(proc.id)">Edit</button>
-              <button class="btn btn-secondary" @click="view(proc.id)">View</button>
-              <button class="btn btn-secondary" @click="exportProcess(proc.id)">Export</button>
-              <button class="btn btn-danger" @click="remove(proc.id)">Delete</button>
-            </div>
-          </td>
-        </tr>
-        <tr v-if="!processes.length">
-          <td colspan="3">No processes yet. Create or import one to get started.</td>
-        </tr>
-      </tbody>
-    </table>
+    <div class="table-wrapper">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Updated</th>
+            <th style="width: 260px">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="proc in processes" :key="proc.id">
+            <td>{{ proc.name }}</td>
+            <td>{{ formatDate(proc.updatedAt) }}</td>
+            <td>
+              <div class="actions">
+                <button class="btn btn-secondary" @click="edit(proc.id)">Edit</button>
+                <button class="btn btn-secondary" @click="view(proc.id)">View</button>
+                <button class="btn btn-secondary" @click="exportProcess(proc.id)">Export</button>
+                <button class="btn btn-danger" @click="remove(proc.id)">Delete</button>
+              </div>
+            </td>
+          </tr>
+          <tr v-if="!processes.length">
+            <td colspan="3">No processes yet. Create or import one to get started.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 </template>
 

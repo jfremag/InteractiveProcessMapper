@@ -8,7 +8,7 @@
         <button class="btn btn-secondary" @click="goEdit">Edit</button>
       </div>
     </div>
-    <div ref="canvas" style="height: 600px; border: 1px solid #e5e7eb; border-radius: 8px;"></div>
+    <div ref="canvas" class="viewer-canvas"></div>
   </div>
   <div v-else class="card">
     <p>Process not found.</p>
@@ -32,6 +32,14 @@ const store = useProcessStore();
 const canvas = ref(null);
 const viewer = ref(null);
 const current = ref(null);
+const resizeObserver = ref(null);
+
+function refreshViewport() {
+  if (!viewer.value) return;
+  const canvasModule = viewer.value.get('canvas');
+  canvasModule?.resized();
+  canvasModule?.zoom('fit-viewport');
+}
 
 async function loadProcess(id) {
   const proc = store.getProcessById(id);
@@ -47,6 +55,11 @@ async function loadProcess(id) {
       return;
     }
     viewer.value = new BpmnViewer({ container: canvas.value });
+
+    resizeObserver.value = new ResizeObserver(() => {
+      refreshViewport();
+    });
+    resizeObserver.value.observe(canvas.value);
   }
   const xml = proc.bpmnXml || defaultBpmn;
   try {
@@ -64,8 +77,7 @@ async function loadProcess(id) {
       return;
     }
   }
-  const canvasModule = viewer.value.get('canvas');
-  canvasModule?.zoom('fit-viewport');
+  refreshViewport();
 }
 
 function downloadXml() {
@@ -104,6 +116,29 @@ watch(
 );
 
 onBeforeUnmount(() => {
+  resizeObserver.value?.disconnect();
   viewer.value?.destroy();
 });
 </script>
+
+<style scoped>
+.viewer-canvas {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  height: clamp(400px, 68vh, 820px);
+  min-height: 340px;
+  background: #fff;
+  overflow: hidden;
+}
+
+:deep(.viewer-canvas > .djs-container) {
+  width: 100%;
+  height: 100%;
+}
+
+@media (max-width: 768px) {
+  .viewer-canvas {
+    height: clamp(360px, 60vh, 680px);
+  }
+}
+</style>

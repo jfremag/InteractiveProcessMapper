@@ -94,6 +94,14 @@ const modelReady = ref(false)
 const loadingModel = ref(false)
 const placementCursor = ref({ x: 260, y: 180 })
 const lastElement = ref(null)
+const resizeObserver = ref(null)
+
+function refreshViewport() {
+  if (!modeler.value) return
+  const canvasApi = modeler.value.get('canvas')
+  canvasApi.resized()
+  canvasApi.zoom('fit-viewport')
+}
 
 async function loadProcess(id) {
   modelReady.value = false
@@ -120,6 +128,11 @@ async function loadProcess(id) {
       // Disable ZoomScroll to avoid non-passive wheel listeners in Chrome
       additionalModules: [{ zoomScroll: ['value', null] }],
     })
+
+    resizeObserver.value = new ResizeObserver(() => {
+      refreshViewport()
+    })
+    resizeObserver.value.observe(canvas.value)
   }
 }
 
@@ -254,7 +267,7 @@ async function importDiagram(xml) {
   const diagramXml = xml || defaultBpmn
   try {
     await modeler.value.importXML(diagramXml)
-    modeler.value.get('canvas').zoom('fit-viewport')
+    refreshViewport()
     setLastElementFromDiagram()
     modelReady.value = true
   } catch (error) {
@@ -262,7 +275,7 @@ async function importDiagram(xml) {
     if (diagramXml !== defaultBpmn) {
       try {
         await modeler.value.importXML(defaultBpmn)
-        modeler.value.get('canvas').zoom('fit-viewport')
+        refreshViewport()
         setLastElementFromDiagram()
         if (current.value) {
           store.updateProcess(current.value.id, { bpmnXml: defaultBpmn })
@@ -279,7 +292,7 @@ async function importDiagram(xml) {
 
     try {
       await modeler.value.createDiagram()
-      modeler.value.get('canvas').zoom('fit-viewport')
+      refreshViewport()
       setLastElementFromDiagram()
       modelReady.value = true
       if (current.value) {
@@ -314,6 +327,7 @@ watch(
 )
 
 onBeforeUnmount(() => {
+  resizeObserver.value?.disconnect()
   modeler.value?.destroy()
 })
 </script>
@@ -354,7 +368,8 @@ onBeforeUnmount(() => {
 
 .modeler-canvas {
   position: relative;
-  height: 600px;
+  height: clamp(420px, 70vh, 860px);
+  min-height: 360px;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
   background: #fff;
