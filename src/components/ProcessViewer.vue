@@ -1,5 +1,5 @@
 <template>
-  <div class="card" v-if="current">
+  <div class="card viewer-card" v-if="current">
     <div class="section-title">
       <h2>{{ current.name }}</h2>
       <div class="actions">
@@ -157,13 +157,21 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+.viewer-card {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-height: calc(100vh - 180px);
+}
+
 .viewer-canvas {
   border: 1px solid #e5e7eb;
   border-radius: 8px;
-  height: clamp(400px, 68vh, 820px);
-  min-height: 340px;
   background: #fff;
   overflow: hidden;
+  flex: 1;
+  min-height: 480px;
+  height: calc(100vh - 240px);
 }
 
 :deep(.viewer-canvas > .djs-container) {
@@ -171,9 +179,20 @@ onBeforeUnmount(() => {
   height: 100%;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 900px) {
+  .viewer-card {
+    min-height: calc(100vh - 140px);
+  }
+
   .viewer-canvas {
-    height: clamp(360px, 60vh, 680px);
+    height: calc(100vh - 200px);
+    min-height: 400px;
+  }
+}
+
+@media (max-width: 640px) {
+  .viewer-canvas {
+    height: calc(100vh - 180px);
   }
 }
 </style>
