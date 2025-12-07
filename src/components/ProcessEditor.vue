@@ -369,7 +369,7 @@ onBeforeUnmount(() => {
   flex-direction: column;
   gap: 1rem;
   flex: 1;
-  min-height: 0;
+  min-height: calc(100vh - 200px);
 }
 
 .editor-grid {
@@ -416,9 +416,9 @@ onBeforeUnmount(() => {
   border-radius: 8px;
   background: #fff;
   overflow: hidden;
-  height: auto;
+  height: calc(100vh - 240px);
   min-height: 520px;
-  max-height: calc(100vh - 220px);
+  max-height: none;
 }
 
 :deep(.modeler-canvas > .djs-container) {
@@ -440,13 +440,14 @@ onBeforeUnmount(() => {
   }
 
   .modeler-canvas {
-    max-height: calc(100vh - 180px);
+    height: calc(100vh - 200px);
   }
 }
 
 @media (max-width: 640px) {
   .modeler-canvas {
     min-height: 440px;
+    height: calc(100vh - 180px);
   }
 }
 </style>
