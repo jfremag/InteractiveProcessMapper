@@ -408,6 +408,7 @@ onBeforeUnmount(() => {
 .editor-grid {
   display: grid;
   grid-template-columns: minmax(240px, 320px) 1fr;
+  grid-template-rows: minmax(0, 1fr);
   gap: 1rem;
   flex: 1;
   min-height: 0;
@@ -448,12 +449,13 @@ onBeforeUnmount(() => {
   border: 1px solid #e5e7eb;
   border-radius: 8px;
   background: #fff;
-  overflow: hidden;
+  overflow: auto;
   height: 100%;
   min-height: 520px;
   max-height: none;
   display: flex;
   flex: 1 1 auto;
+  min-height: 0;
 }
 
 :deep(.modeler-canvas > .djs-container) {
