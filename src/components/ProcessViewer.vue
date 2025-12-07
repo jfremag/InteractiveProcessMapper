@@ -163,6 +163,7 @@ onBeforeUnmount(() => {
   gap: 1rem;
   flex: 1;
   min-height: 0;
+  height: 100%;
 }
 
 .viewer-canvas {
