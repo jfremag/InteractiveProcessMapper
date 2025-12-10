@@ -5,6 +5,7 @@
         <h1>Interactive Process Mapper</h1>
         <nav class="nav-actions">
           <RouterLink to="/">Home</RouterLink>
+          <RouterLink to="/admin/themes">Theme settings</RouterLink>
           <label class="theme-switcher">
             <span class="theme-label">Theme</span>
             <select v-model="selectedThemeId">
