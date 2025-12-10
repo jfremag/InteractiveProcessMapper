@@ -1,0 +1,23 @@
+{
+  "name": "ProcessPortal",
+  "uri": "http://process-portal/schema/pp",
+  "prefix": "pp",
+  "xml": {
+    "tagAlias": "lowerCase"
+  },
+  "types": [
+    {
+      "name": "Linkable",
+      "extends": [
+        "bpmn:FlowNode"
+      ],
+      "properties": [
+        {
+          "name": "linkedProcessId",
+          "isAttr": true,
+          "type": "String"
+        }
+      ]
+    }
+  ]
+}

@@ -122,6 +122,7 @@ import 'bpmn-js/dist/assets/bpmn-font/css/bpmn-embedded.css'
 import { useProcessStore, defaultBpmn } from '../stores/processStore.js'
 import { useThemeStore } from '../stores/themeStore.js'
 import createThemedRenderer from '../bpmn/ThemedRenderer.js'
+import ppModdle from '../bpmn/pp-moddle.json'
 
 const route = useRoute()
 const router = useRouter()
@@ -208,6 +209,7 @@ async function loadProcess(id) {
     }
     modeler.value = new BpmnModeler({
       container: canvas.value,
+      moddleExtensions: { pp: ppModdle },
       // Disable ZoomScroll to avoid non-passive wheel listeners in Chrome
       additionalModules: [
         { zoomScroll: ['value', null] },

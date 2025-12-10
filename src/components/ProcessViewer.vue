@@ -36,6 +36,7 @@ import 'bpmn-js/dist/assets/diagram-js.css'
 import 'bpmn-js/dist/assets/bpmn-js.css'
 import 'bpmn-js/dist/assets/bpmn-font/css/bpmn-embedded.css'
 import { useProcessStore, defaultBpmn } from '../stores/processStore.js'
+import ppModdle from '../bpmn/pp-moddle.json'
 
 const route = useRoute()
 const router = useRouter()
@@ -234,6 +235,7 @@ async function loadProcess(id) {
     }
     viewer.value = new BpmnViewer({
       container: canvas.value,
+      moddleExtensions: { pp: ppModdle },
       additionalModules: [
         MoveCanvasModule,
         createThemedRenderer({ getTheme: () => themeStore.currentTheme }),
