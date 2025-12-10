@@ -17,7 +17,7 @@
             <th>Area</th>
             <th>Status</th>
             <th>Version</th>
-            <th>Updated</th>
+            <th>Updated At</th>
             <th style="width: 260px">Actions</th>
           </tr>
         </thead>
