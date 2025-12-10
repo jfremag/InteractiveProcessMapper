@@ -14,6 +14,9 @@
         <thead>
           <tr>
             <th>Name</th>
+            <th>Area</th>
+            <th>Status</th>
+            <th>Version</th>
             <th>Updated</th>
             <th style="width: 260px">Actions</th>
           </tr>
@@ -21,6 +24,9 @@
         <tbody>
           <tr v-for="proc in processes" :key="proc.id">
             <td>{{ proc.name }}</td>
+            <td>{{ proc.area || '—' }}</td>
+            <td class="status" :data-status="proc.status">{{ proc.status }}</td>
+            <td>v{{ proc.version }}</td>
             <td>{{ formatDate(proc.updatedAt) }}</td>
             <td>
               <div class="actions">
@@ -32,7 +38,7 @@
             </td>
           </tr>
           <tr v-if="!processes.length">
-            <td colspan="3">No processes yet. Create or import one to get started.</td>
+            <td colspan="6">No processes yet. Create or import one to get started.</td>
           </tr>
         </tbody>
       </table>
@@ -99,3 +105,19 @@ function handleImport(event) {
   if (fileInput.value) fileInput.value.value = '';
 }
 </script>
+
+<style scoped>
+.status {
+  text-transform: capitalize;
+}
+
+.status[data-status='published'] {
+  color: #065f46;
+  font-weight: 600;
+}
+
+.status[data-status='draft'] {
+  color: #92400e;
+  font-weight: 600;
+}
+</style>
