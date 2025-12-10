@@ -1,5 +1,16 @@
 :root {
   box-sizing: border-box;
+  --pp-bg: #f5f7fb;
+  --pp-surface: #ffffff;
+  --pp-border: #d2d7e0;
+  --pp-primary: #2563eb;
+  --pp-accent: #ec4899;
+  --pp-text: #111827;
+  --pp-muted-text: #6b7280;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  line-height: 1.5;
+  color: var(--pp-text);
+  background-color: var(--pp-bg);
 }
 
 *,
@@ -8,17 +19,11 @@
   box-sizing: inherit;
 }
 
-:root {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  line-height: 1.5;
-  color: #1f2933;
-  background-color: #f5f7fa;
-}
-
 body {
   margin: 0;
   min-height: 100vh;
-  background-color: #f5f7fa;
+  background-color: var(--pp-bg);
+  color: var(--pp-text);
 }
 
 :root,
@@ -44,7 +49,8 @@ button {
 }
 
 .card {
-  background: #fff;
+  background: var(--pp-surface);
+  border: 1px solid var(--pp-border);
   border-radius: 12px;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
   padding: 1.5rem;
@@ -60,16 +66,16 @@ button {
 .table td {
   text-align: left;
   padding: 0.75rem;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--pp-border);
 }
 
 .table th {
-  color: #6b7280;
+  color: var(--pp-muted-text);
   font-weight: 600;
 }
 
 .table tr:hover {
-  background-color: #f9fafb;
+  background-color: var(--pp-bg);
 }
 
 .actions {
@@ -79,11 +85,11 @@ button {
 }
 
 .btn {
-  border: none;
+  border: 1px solid transparent;
   border-radius: 8px;
   padding: 0.4rem 0.75rem;
   font-weight: 600;
-  transition: transform 0.1s ease, box-shadow 0.2s ease;
+  transition: transform 0.1s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
 .btn:hover {
@@ -92,23 +98,26 @@ button {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #2563eb, #1d4ed8);
-  color: #fff;
+  background: var(--pp-primary);
+  border-color: var(--pp-primary);
+  color: var(--pp-surface);
 }
 
 .btn-secondary {
-  background: #e5e7eb;
-  color: #111827;
+  background: var(--pp-surface);
+  border: 1px solid var(--pp-border);
+  color: var(--pp-text);
 }
 
 .btn-danger {
-  background: #ef4444;
-  color: #fff;
+  background: var(--pp-accent);
+  border-color: var(--pp-accent);
+  color: var(--pp-surface);
 }
 
 .header {
-  background: #111827;
-  color: #f9fafb;
+  background: var(--pp-primary);
+  color: var(--pp-surface);
   padding: 1rem 0;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
@@ -126,7 +135,7 @@ button {
 }
 
 .nav-actions a {
-  color: #e5e7eb;
+  color: var(--pp-surface);
   font-weight: 600;
 }
 
