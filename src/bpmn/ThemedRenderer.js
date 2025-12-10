@@ -1,5 +1,6 @@
 import BaseRenderer from 'diagram-js/lib/draw/BaseRenderer'
 import { is } from 'bpmn-js/lib/util/ModelUtil'
+import { attr as svgAttr } from 'tiny-svg'
 
 const HIGH_PRIORITY = 1500
 
@@ -23,13 +24,7 @@ class ThemedRenderer extends BaseRenderer {
     const theme = this.getTheme()
     const colors = this._getShapeColors(element, theme)
 
-    if (shape && colors) {
-      Object.entries(colors).forEach(([attr, value]) => {
-        if (value != null) {
-          shape.setAttribute(attr, value)
-        }
-      })
-    }
+    this._applyAttrs(shape, colors)
 
     return shape
   }
@@ -39,11 +34,24 @@ class ThemedRenderer extends BaseRenderer {
     const theme = this.getTheme()
     const stroke = getVar(theme, '--pp-primary', '#2563eb')
 
-    if (connection && stroke) {
-      connection.setAttribute('stroke', stroke)
-    }
+    this._applyAttrs(connection, { stroke })
 
     return connection
+  }
+
+  _applyAttrs(node, attrs) {
+    if (!node || !attrs) return
+
+    const entries = Object.entries(attrs).filter(([, value]) => value != null)
+    if (!entries.length) return
+
+    svgAttr(node, Object.fromEntries(entries))
+
+    // Some BPMN visuals set their own fill/stroke on child nodes. Override them
+    // so theme colors always win.
+    Array.from(node.children || []).forEach((child) => {
+      this._applyAttrs(child, attrs)
+    })
   }
 
   _getShapeColors(element, theme) {
