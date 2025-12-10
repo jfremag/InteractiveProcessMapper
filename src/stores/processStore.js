@@ -20,11 +20,38 @@ function generateId() {
   return 'proc-' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
 }
 
-// ProcessMeta type (JS doc comment)
-// id: string
-// name: string
-// updatedAt: string (ISO)
-// bpmnXml: string
+// Process shape (plain JS object, not TypeScript):
+// {
+//   id: string,
+//   name: string,
+//   area: string | null,
+//   parentId: string | null,
+//   status: 'draft' | 'published',
+//   version: number,
+//   createdAt: string (ISO),
+//   updatedAt: string (ISO),
+//   bpmnXml: string,
+// }
+
+function normalizeProcess(raw) {
+  const now = new Date().toISOString();
+  const updatedAt = raw?.updatedAt || now;
+  const createdAt = raw?.createdAt || updatedAt;
+  const status = raw?.status === 'published' ? 'published' : 'draft';
+  const versionNumber = Number(raw?.version);
+
+  return {
+    id: raw?.id || generateId(),
+    name: raw?.name || 'Untitled process',
+    area: raw?.area ?? null,
+    parentId: raw?.parentId ?? null,
+    status,
+    version: Number.isFinite(versionNumber) && versionNumber > 0 ? versionNumber : 1,
+    createdAt,
+    updatedAt,
+    bpmnXml: raw?.bpmnXml || defaultBpmn,
+  };
+}
 
 export const useProcessStore = defineStore('processStore', {
   state: () => ({
@@ -38,7 +65,12 @@ export const useProcessStore = defineStore('processStore', {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
         try {
-          this.processes = JSON.parse(raw);
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) {
+            this.processes = parsed.map((item) => normalizeProcess(item));
+          } else {
+            this.processes = [];
+          }
         } catch (err) {
           console.error('Failed to parse processes', err);
           this.processes = [];
@@ -57,20 +89,35 @@ export const useProcessStore = defineStore('processStore', {
       return this.processes.find((p) => p.id === id) || null;
     },
     createProcess(name = 'New process') {
+      const now = new Date().toISOString();
       const newProcess = {
         id: generateId(),
         name,
-        updatedAt: new Date().toISOString(),
+        area: null,
+        parentId: null,
+        status: 'draft',
+        version: 1,
+        createdAt: now,
+        updatedAt: now,
         bpmnXml: defaultBpmn,
       };
       this.processes.push(newProcess);
       this.saveToStorage();
       return newProcess;
     },
-    updateProcess(id, { name, bpmnXml }) {
+    updateProcess(id, { name, area, parentId, status, bpmnXml }) {
       const existing = this.getProcessById(id);
       if (!existing) return;
       if (name !== undefined) existing.name = name;
+      if (area !== undefined) existing.area = area;
+      if (parentId !== undefined) existing.parentId = parentId;
+      if (status !== undefined) {
+        const previousStatus = existing.status;
+        existing.status = status === 'published' ? 'published' : 'draft';
+        if (existing.status === 'published' && previousStatus !== 'published') {
+          existing.version = (existing.version || 1) + 1;
+        }
+      }
       if (bpmnXml !== undefined) existing.bpmnXml = bpmnXml;
       existing.updatedAt = new Date().toISOString();
       this.saveToStorage();
@@ -86,10 +133,16 @@ export const useProcessStore = defineStore('processStore', {
       this.selectedProcess = this.getProcessById(id);
     },
     importProcessFromFile(name, bpmnXml) {
+      const now = new Date().toISOString();
       const imported = {
         id: generateId(),
         name: name || 'Imported process',
-        updatedAt: new Date().toISOString(),
+        area: null,
+        parentId: null,
+        status: 'draft',
+        version: 1,
+        createdAt: now,
+        updatedAt: now,
         bpmnXml,
       };
       this.processes.push(imported);

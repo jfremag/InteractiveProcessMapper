@@ -4,6 +4,13 @@
       <div>
         <h2>Edit: {{ current.name }}</h2>
         <input v-model="editableName" placeholder="Process name" />
+        <div class="process-meta">
+          <span class="pill" :data-status="current.status">
+            {{ current.status }} • v{{ current.version }}
+          </span>
+          <span>Area: {{ current.area || '—' }}</span>
+          <span>Updated: {{ formatDate(current.updatedAt) }}</span>
+        </div>
       </div>
       <div class="actions">
         <button class="btn btn-secondary" @click="goHome">Back</button>
@@ -96,6 +103,8 @@ const placementCursor = ref({ x: 260, y: 180 })
 const lastElement = ref(null)
 const resizeObserver = ref(null)
 const removeWheelListener = ref(null)
+
+const formatDate = (iso) => new Date(iso).toLocaleString()
 
 async function ensureCanvasSized() {
   await nextTick()
@@ -442,6 +451,38 @@ onBeforeUnmount(() => {
   margin: 0;
   color: #6b7280;
   font-size: 0.9rem;
+}
+
+.process-meta {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-top: 0.35rem;
+  color: #4b5563;
+  font-size: 0.95rem;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+.pill[data-status='published'] {
+  background: #ecfdf3;
+  color: #065f46;
+  border: 1px solid #bbf7d0;
+}
+
+.pill[data-status='draft'] {
+  background: #fff7ed;
+  color: #92400e;
+  border: 1px solid #fed7aa;
 }
 
 .modeler-canvas {
