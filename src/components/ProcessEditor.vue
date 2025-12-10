@@ -87,10 +87,13 @@ import 'bpmn-js/dist/assets/diagram-js.css'
 import 'bpmn-js/dist/assets/bpmn-js.css'
 import 'bpmn-js/dist/assets/bpmn-font/css/bpmn-embedded.css'
 import { useProcessStore, defaultBpmn } from '../stores/processStore.js'
+import { useThemeStore } from '../stores/themeStore.js'
+import createThemedRenderer from '../bpmn/ThemedRenderer.js'
 
 const route = useRoute()
 const router = useRouter()
 const store = useProcessStore()
+const themeStore = useThemeStore()
 
 const canvas = ref(null)
 const importInput = ref(null)
@@ -167,7 +170,10 @@ async function loadProcess(id) {
     modeler.value = new BpmnModeler({
       container: canvas.value,
       // Disable ZoomScroll to avoid non-passive wheel listeners in Chrome
-      additionalModules: [{ zoomScroll: ['value', null] }],
+      additionalModules: [
+        { zoomScroll: ['value', null] },
+        createThemedRenderer({ getTheme: () => themeStore.currentTheme }),
+      ],
     })
 
     setupWheelZoom()
@@ -395,6 +401,21 @@ watch(
       await importDiagram(current.value.bpmnXml)
     }
   }
+)
+
+watch(
+  () => themeStore.currentTheme,
+  () => {
+    if (!modeler.value) return
+
+    const elementRegistry = modeler.value.get('elementRegistry')
+    const elements = elementRegistry?.getAll?.() || []
+    if (elements.length) {
+      modeler.value.get('eventBus')?.fire('elements.changed', { elements })
+    }
+    refreshViewport()
+  },
+  { deep: true }
 )
 
 onBeforeUnmount(() => {

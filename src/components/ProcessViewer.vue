@@ -30,6 +30,8 @@ import { onMounted, onBeforeUnmount, ref, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import BpmnViewer from 'bpmn-js/lib/Viewer'
 import MoveCanvasModule from 'diagram-js/lib/navigation/movecanvas'
+import createThemedRenderer from '../bpmn/ThemedRenderer.js'
+import { useThemeStore } from '../stores/themeStore.js'
 import 'bpmn-js/dist/assets/diagram-js.css'
 import 'bpmn-js/dist/assets/bpmn-js.css'
 import 'bpmn-js/dist/assets/bpmn-font/css/bpmn-embedded.css'
@@ -38,6 +40,7 @@ import { useProcessStore, defaultBpmn } from '../stores/processStore.js'
 const route = useRoute()
 const router = useRouter()
 const store = useProcessStore()
+const themeStore = useThemeStore()
 
 const canvas = ref(null)
 const viewer = ref(null)
@@ -231,7 +234,10 @@ async function loadProcess(id) {
     }
     viewer.value = new BpmnViewer({
       container: canvas.value,
-      additionalModules: [MoveCanvasModule],
+      additionalModules: [
+        MoveCanvasModule,
+        createThemedRenderer({ getTheme: () => themeStore.currentTheme }),
+      ],
     })
 
     logSizes('viewer created')
@@ -343,6 +349,21 @@ watch(
   async (id) => {
     await loadProcess(id)
   }
+)
+
+watch(
+  () => themeStore.currentTheme,
+  () => {
+    if (!viewer.value) return
+
+    const elementRegistry = viewer.value.get('elementRegistry')
+    const elements = elementRegistry?.getAll?.() || []
+    if (elements.length) {
+      viewer.value.get('eventBus')?.fire('elements.changed', { elements })
+    }
+    refreshViewport()
+  },
+  { deep: true }
 )
 
 onBeforeUnmount(() => {
