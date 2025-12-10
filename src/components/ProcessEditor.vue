@@ -3,7 +3,6 @@
     <div class="section-title">
       <div>
         <h2>Edit: {{ current.name }}</h2>
-        <input v-model="editableName" placeholder="Process name" />
         <div class="process-meta">
           <span class="pill" :data-status="current.status">
             {{ current.status }} • v{{ current.version }}
@@ -21,6 +20,40 @@
         <button class="btn btn-secondary" @click="downloadXml">Export</button>
         <button class="btn btn-primary" @click="saveProcess">Save</button>
       </div>
+    </div>
+
+    <div class="metadata-grid">
+      <label class="field">
+        <span class="field-label">Name</span>
+        <input v-model="editableName" placeholder="Process name" />
+      </label>
+      <label class="field">
+        <span class="field-label">Area</span>
+        <input
+          v-model="editableArea"
+          placeholder="Business area, domain, or department"
+        />
+      </label>
+      <label class="field">
+        <span class="field-label">Parent process</span>
+        <select v-model="editableParentId">
+          <option :value="null">No parent</option>
+          <option
+            v-for="proc in parentOptions"
+            :key="proc.id"
+            :value="proc.id"
+          >
+            {{ proc.name }}
+          </option>
+        </select>
+      </label>
+      <label class="field">
+        <span class="field-label">Status</span>
+        <select v-model="editableStatus" @change="handleStatusChange">
+          <option value="draft">Draft</option>
+          <option value="published">Published</option>
+        </select>
+      </label>
     </div>
 
     <div class="editor-grid">
@@ -80,7 +113,7 @@
 </template>
 
 <script setup>
-import { onMounted, onBeforeUnmount, ref, watch, nextTick, toRaw } from 'vue'
+import { computed, onMounted, onBeforeUnmount, ref, watch, nextTick, toRaw } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import BpmnModeler from 'bpmn-js/lib/Modeler'
 import 'bpmn-js/dist/assets/diagram-js.css'
@@ -99,6 +132,9 @@ const canvas = ref(null)
 const importInput = ref(null)
 const modeler = ref(null)
 const editableName = ref('')
+const editableArea = ref('')
+const editableParentId = ref(null)
+const editableStatus = ref('draft')
 const current = ref(null)
 const modelReady = ref(false)
 const loadingModel = ref(false)
@@ -158,6 +194,9 @@ async function loadProcess(id) {
 
   current.value = proc
   editableName.value = proc.name
+  editableArea.value = proc.area || ''
+  editableParentId.value = proc.parentId || null
+  editableStatus.value = proc.status
   placementCursor.value = { x: 260, y: 180 }
 
   // Ensure DOM is updated so <div ref="canvas"> exists
@@ -190,9 +229,22 @@ function saveProcess() {
   modeler.value.saveXML({ format: true }).then(({ xml }) => {
     store.updateProcess(current.value.id, {
       name: editableName.value,
+      area: editableArea.value || null,
+      parentId: editableParentId.value || null,
+      status: editableStatus.value,
       bpmnXml: xml,
     })
     alert('Process saved')
+  })
+}
+
+function handleStatusChange() {
+  if (!current.value) return
+  store.updateProcess(current.value.id, {
+    name: editableName.value,
+    area: editableArea.value || null,
+    parentId: editableParentId.value || null,
+    status: editableStatus.value,
   })
 }
 
@@ -291,6 +343,10 @@ function goView() {
     router.push(`/viewer/${current.value.id}`)
   }
 }
+
+const parentOptions = computed(() =>
+  store.processes.filter((p) => p.id !== current.value?.id)
+)
 
 function setupWheelZoom() {
   if (!canvas.value) return
@@ -481,6 +537,32 @@ onBeforeUnmount(() => {
   align-items: center;
   margin-top: 0.35rem;
   color: #4b5563;
+  font-size: 0.95rem;
+}
+
+.metadata-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.75rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.field-label {
+  font-weight: 700;
+  color: #374151;
+}
+
+.metadata-grid input,
+.metadata-grid select {
+  width: 100%;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
   font-size: 0.95rem;
 }
 
