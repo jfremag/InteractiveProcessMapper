@@ -5,6 +5,14 @@
         <h1>Interactive Process Mapper</h1>
         <nav class="nav-actions">
           <RouterLink to="/">Home</RouterLink>
+          <label class="theme-switcher">
+            <span class="theme-label">Theme</span>
+            <select v-model="selectedThemeId">
+              <option v-for="theme in themes" :key="theme.id" :value="theme.id">
+                {{ theme.name }}
+              </option>
+            </select>
+          </label>
         </nav>
       </div>
     </header>
@@ -19,10 +27,18 @@
 </template>
 
 <script setup>
-import { onMounted } from 'vue';
+import { computed, onMounted } from 'vue';
 import { useProcessStore } from './stores/processStore.js';
+import { useThemeStore } from './stores/themeStore.js';
 
 const processStore = useProcessStore();
+const themeStore = useThemeStore();
+
+const themes = computed(() => themeStore.themes);
+const selectedThemeId = computed({
+  get: () => themeStore.currentThemeId,
+  set: (value) => themeStore.setCurrentTheme(value),
+});
 
 onMounted(() => {
   processStore.init();
@@ -62,11 +78,36 @@ onMounted(() => {
   justify-content: space-between;
 }
 
+.theme-switcher {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.9rem;
+  color: var(--pp-surface);
+}
+
+.theme-label {
+  opacity: 0.8;
+}
+
+.theme-switcher select {
+  border-radius: 6px;
+  border: 1px solid var(--pp-border);
+  padding: 0.2rem 0.5rem;
+  background: var(--pp-surface);
+  color: var(--pp-text);
+  font-weight: 600;
+}
+
 @media (max-width: 900px) {
   .header-inner {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.5rem;
+  }
+
+  .theme-switcher {
+    color: inherit;
   }
 }
 </style>
