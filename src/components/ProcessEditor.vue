@@ -56,7 +56,7 @@
       </label>
     </div>
 
-    <div class="editor-grid">
+    <div class="editor-grid" :class="{ 'has-selection': !!selectedElement }">
       <div class="toolbar">
         <p class="toolbar-title">Quick add</p>
         <div class="toolbar-actions">
@@ -97,6 +97,36 @@
       </div>
 
       <div ref="canvas" class="modeler-canvas"></div>
+
+      <aside v-if="selectedElement" class="properties-panel">
+        <div class="panel-header">
+          <p class="panel-title">Selection</p>
+          <p class="panel-subtitle">{{ selectedElementType }}</p>
+        </div>
+
+        <div class="panel-field">
+          <span class="field-label">Label</span>
+          <p class="field-value">{{ selectedElementLabel }}</p>
+        </div>
+
+        <div v-if="supportsLinkedProcess" class="panel-field">
+          <label class="field-label" for="linkedProcessSelect">Linked process</label>
+          <select
+            id="linkedProcessSelect"
+            :value="selectedLinkedProcessValue"
+            @change="onLinkedProcessChange"
+          >
+            <option value="">None</option>
+            <option
+              v-for="proc in linkedProcessOptions"
+              :key="proc.id"
+              :value="proc.id"
+            >
+              {{ proc.name }}
+            </option>
+          </select>
+        </div>
+      </aside>
     </div>
     <input
       ref="importInput"
@@ -123,6 +153,7 @@ import { useProcessStore, defaultBpmn } from '../stores/processStore.js'
 import { useThemeStore } from '../stores/themeStore.js'
 import createThemedRenderer from '../bpmn/ThemedRenderer.js'
 import ppModdle from '../bpmn/pp-moddle.json'
+import { getLinkedProcessId, setLinkedProcessId } from '../bpmn/linkHelpers.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -143,6 +174,11 @@ const placementCursor = ref({ x: 260, y: 180 })
 const lastElement = ref(null)
 const resizeObserver = ref(null)
 const removeWheelListener = ref(null)
+const selectedElement = ref(null)
+const selectedBusinessObject = ref(null)
+const selectedLinkedProcessId = ref(null)
+const selectionHandlerBound = ref(false)
+const diagramDirty = ref(false)
 
 const formatDate = (iso) => new Date(iso).toLocaleString()
 
@@ -199,6 +235,7 @@ async function loadProcess(id) {
   editableParentId.value = proc.parentId || null
   editableStatus.value = proc.status
   placementCursor.value = { x: 260, y: 180 }
+  handleSelectionChanged({ newSelection: [] })
 
   // Ensure DOM is updated so <div ref="canvas"> exists
   if (!modeler.value) {
@@ -218,6 +255,7 @@ async function loadProcess(id) {
     })
 
     setupWheelZoom()
+    setupSelectionHandling()
 
     resizeObserver.value = new ResizeObserver(() => {
       refreshViewport()
@@ -236,6 +274,7 @@ function saveProcess() {
       status: editableStatus.value,
       bpmnXml: xml,
     })
+    diagramDirty.value = false
     alert('Process saved')
   })
 }
@@ -320,6 +359,62 @@ function createShape(type, label) {
   lastElement.value = shape
 }
 
+function handleSelectionChanged(event) {
+  const element = event?.newSelection?.[0] || null
+  selectedElement.value = element
+  selectedBusinessObject.value = element?.businessObject || null
+  selectedLinkedProcessId.value = getLinkedProcessId(selectedBusinessObject.value)
+}
+
+function setupSelectionHandling() {
+  if (!modeler.value || selectionHandlerBound.value) return
+  const eventBus = modeler.value.get('eventBus')
+  eventBus.on('selection.changed', handleSelectionChanged)
+  selectionHandlerBound.value = true
+}
+
+function onLinkedProcessChange(event) {
+  if (!selectedElement.value || !modeler.value) return
+
+  const rawValue = event.target.value
+  const newValue = rawValue === '' ? null : rawValue
+  const modeling = modeler.value.get('modeling')
+
+  setLinkedProcessId(selectedBusinessObject.value, newValue)
+  modeling.updateProperties(selectedElement.value, {
+    linkedProcessId: newValue === null ? undefined : newValue,
+  })
+
+  selectedLinkedProcessId.value = newValue
+  diagramDirty.value = true
+}
+
+const selectedElementType = computed(() => {
+  const type = selectedBusinessObject.value?.$type || selectedElement.value?.type
+  return type?.replace('bpmn:', '') || 'Element'
+})
+
+const selectedElementLabel = computed(
+  () =>
+    selectedBusinessObject.value?.name ||
+    selectedElement.value?.businessObject?.name ||
+    selectedElement.value?.id ||
+    '—'
+)
+
+const supportsLinkedProcess = computed(() => {
+  const type = selectedBusinessObject.value?.$type || selectedElement.value?.type
+  return !!type && type.includes('Task')
+})
+
+const selectedLinkedProcessValue = computed(
+  () => selectedLinkedProcessId.value ?? ''
+)
+
+const linkedProcessOptions = computed(() =>
+  store.processes.filter((p) => p.id !== current.value?.id)
+)
+
 function createTask() {
   createShape('bpmn:Task', 'Task')
 }
@@ -396,6 +491,7 @@ function setLastElementFromDiagram() {
 
 async function importDiagram(xml) {
   if (!modeler.value) return
+  handleSelectionChanged({ newSelection: [] })
   modelReady.value = false
   loadingModel.value = true
   const diagramXml = xml || defaultBpmn
@@ -478,6 +574,9 @@ watch(
 
 onBeforeUnmount(() => {
   resizeObserver.value?.disconnect()
+  if (selectionHandlerBound.value) {
+    modeler.value?.get('eventBus')?.off('selection.changed', handleSelectionChanged)
+  }
   modeler.value?.destroy()
   removeWheelListener.value?.()
 })
@@ -502,6 +601,10 @@ onBeforeUnmount(() => {
   min-height: 0;
   height: 100%;
   align-items: stretch;
+}
+
+.editor-grid.has-selection {
+  grid-template-columns: minmax(240px, 320px) 1fr minmax(260px, 320px);
 }
 
 .toolbar {
@@ -559,6 +662,11 @@ onBeforeUnmount(() => {
   color: #374151;
 }
 
+.field-value {
+  margin: 0;
+  color: #1f2937;
+}
+
 .metadata-grid input,
 .metadata-grid select {
   width: 100%;
@@ -608,6 +716,49 @@ onBeforeUnmount(() => {
   height: 100%;
   width: 100%;
   flex: 1 1 auto;
+}
+
+.properties-panel {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-height: 0;
+}
+
+.panel-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.panel-title {
+  margin: 0;
+  font-weight: 700;
+  color: #111827;
+}
+
+.panel-subtitle {
+  margin: 0;
+  color: #6b7280;
+  font-size: 0.95rem;
+}
+
+.panel-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.panel-field select {
+  width: 100%;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.95rem;
 }
 
 @media (max-width: 900px) {
