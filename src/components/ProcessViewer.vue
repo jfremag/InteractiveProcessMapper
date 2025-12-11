@@ -10,6 +10,25 @@
           <span>Area: {{ current.area || '—' }}</span>
           <span>Updated: {{ formatDate(current.updatedAt) }}</span>
         </div>
+        <nav
+          v-if="breadcrumbStack.length"
+          class="breadcrumbs"
+          aria-label="Process drilldown breadcrumbs"
+        >
+          <ol>
+            <li v-for="(processId, index) in breadcrumbStack" :key="processId">
+              <button
+                type="button"
+                class="breadcrumb-link"
+                @click="navigateToBreadcrumb(index, processId)"
+              >
+                {{ getProcessName(processId) }}
+              </button>
+              <span class="breadcrumb-separator">›</span>
+            </li>
+            <li class="breadcrumb-current">{{ current.name }}</li>
+          </ol>
+        </nav>
       </div>
       <div class="actions">
         <button class="btn btn-secondary" @click="goHome">Back</button>
@@ -37,6 +56,7 @@ import 'bpmn-js/dist/assets/bpmn-js.css'
 import 'bpmn-js/dist/assets/bpmn-font/css/bpmn-embedded.css'
 import { useProcessStore, defaultBpmn } from '../stores/processStore.js'
 import ppModdle from '../bpmn/pp-moddle.json'
+import { getLinkedProcessId } from '../bpmn/linkHelpers.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -48,6 +68,9 @@ const viewer = ref(null)
 const current = ref(null)
 const resizeObserver = ref(null)
 const removeWheelListener = ref(null)
+const breadcrumbStack = ref([])
+const navigationFromViewer = ref(false)
+const eventHandlerCleanup = ref([])
 
 const formatDate = (iso) => new Date(iso).toLocaleString()
 
@@ -245,6 +268,7 @@ async function loadProcess(id) {
     logSizes('viewer created')
 
     setupWheelZoom()
+    setupViewerInteractions()
 
     resizeObserver.value = new ResizeObserver(() => {
       logSizes('resizeObserver')
@@ -291,6 +315,70 @@ async function loadProcess(id) {
   refreshViewport()
 }
 
+function setupViewerInteractions() {
+  if (!viewer.value) return
+
+  const eventBus = viewer.value.get('eventBus')
+  if (!eventBus) return
+
+  eventHandlerCleanup.value.forEach((fn) => fn?.())
+  eventHandlerCleanup.value = []
+
+  const handleElementClick = (event) => {
+    if (!event?.element) return
+    if (!current.value) return
+
+    const linkedProcessId = getLinkedProcessId(event.element.businessObject)
+
+    if (!linkedProcessId || linkedProcessId === current.value.id) return
+
+    breadcrumbStack.value = [
+      ...breadcrumbStack.value,
+      current.value?.id,
+    ].filter(Boolean)
+
+    navigationFromViewer.value = true
+    router.push({ name: 'viewer', params: { id: linkedProcessId } })
+  }
+
+  const handleHover = (event) => {
+    const linkedProcessId = getLinkedProcessId(event?.element?.businessObject)
+    const gfx = event?.gfx
+
+    if (!gfx) return
+
+    if (linkedProcessId) {
+      gfx.classList.add('has-linked-process')
+      const linkedName = getProcessName(linkedProcessId)
+      gfx.setAttribute(
+        'title',
+        linkedName ? `Open: ${linkedName}` : 'Open linked process'
+      )
+    } else {
+      gfx.classList.remove('has-linked-process')
+      gfx.removeAttribute('title')
+    }
+  }
+
+  const handleOut = (event) => {
+    const gfx = event?.gfx
+    if (gfx) {
+      gfx.classList.remove('has-linked-process')
+      gfx.removeAttribute('title')
+    }
+  }
+
+  eventBus.on('element.click', handleElementClick)
+  eventBus.on('element.hover', handleHover)
+  eventBus.on('element.out', handleOut)
+
+  eventHandlerCleanup.value = [
+    () => eventBus.off('element.click', handleElementClick),
+    () => eventBus.off('element.hover', handleHover),
+    () => eventBus.off('element.out', handleOut),
+  ]
+}
+
 function downloadXml() {
   if (!current.value) return
   const blob = store.exportProcessToBlob(current.value.id)
@@ -313,6 +401,17 @@ function goEdit() {
   if (current.value) {
     router.push(`/editor/${current.value.id}`)
   }
+}
+
+function navigateToBreadcrumb(index, processId) {
+  if (!processId) return
+  breadcrumbStack.value = breadcrumbStack.value.slice(0, index)
+  navigationFromViewer.value = true
+  router.push({ name: 'viewer', params: { id: processId } })
+}
+
+function getProcessName(id) {
+  return store.getProcessById(id)?.name || 'Untitled process'
 }
 
 function setupWheelZoom() {
@@ -349,6 +448,17 @@ onMounted(async () => {
 watch(
   () => route.params.id,
   async (id) => {
+    if (navigationFromViewer.value) {
+      navigationFromViewer.value = false
+    } else {
+      const existingIndex = breadcrumbStack.value.indexOf(id)
+      if (existingIndex >= 0) {
+        breadcrumbStack.value = breadcrumbStack.value.slice(0, existingIndex)
+      } else {
+        breadcrumbStack.value = []
+      }
+    }
+
     await loadProcess(id)
   }
 )
@@ -372,6 +482,7 @@ onBeforeUnmount(() => {
   resizeObserver.value?.disconnect()
   viewer.value?.destroy()
   removeWheelListener.value?.()
+  eventHandlerCleanup.value.forEach((fn) => fn?.())
 })
 </script>
 
@@ -411,6 +522,39 @@ onBeforeUnmount(() => {
   margin-top: 0.35rem;
   color: #4b5563;
   font-size: 0.95rem;
+}
+
+.breadcrumbs ol {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0 0;
+  align-items: center;
+  color: #4b5563;
+  font-size: 0.95rem;
+}
+
+.breadcrumb-link {
+  background: none;
+  border: none;
+  padding: 0;
+  color: #2563eb;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.breadcrumb-link:hover {
+  color: #1d4ed8;
+}
+
+.breadcrumb-separator {
+  color: #9ca3af;
+}
+
+.breadcrumb-current {
+  font-weight: 600;
 }
 
 .pill {
@@ -465,6 +609,10 @@ onBeforeUnmount(() => {
   width: 100% !important;
   height: 100% !important;
   display: block !important;
+}
+
+:deep(.has-linked-process) {
+  cursor: pointer !important;
 }
 
 @media (max-width: 900px) {
