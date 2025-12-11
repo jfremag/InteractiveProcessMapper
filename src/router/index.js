@@ -4,12 +4,14 @@ const ProcessList = () => import('../components/ProcessList.vue');
 const ProcessEditor = () => import('../components/ProcessEditor.vue');
 const ProcessViewer = () => import('../components/ProcessViewer.vue');
 const ThemeAdmin = () => import('../components/ThemeAdmin.vue');
+const ProcessMap = () => import('../components/ProcessMap.vue');
 
 const routes = [
   { path: '/', name: 'home', component: ProcessList },
   { path: '/editor/:id', name: 'editor', component: ProcessEditor },
   { path: '/viewer/:id', name: 'viewer', component: ProcessViewer },
   { path: '/admin/themes', name: 'theme-admin', component: ThemeAdmin },
+  { path: '/map', name: 'map', component: ProcessMap },
 ];
 
 const router = createRouter({
